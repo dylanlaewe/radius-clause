@@ -1,0 +1,16 @@
+{
+  "ruleA": {
+    "lat": 26.6406,
+    "lon": -81.8723,
+    "radiusKm": 20,
+    "minWindKt": 96,
+    "limitUSD": 1000000
+  },
+  "ruleB": {
+    "lat": 26.6406,
+    "lon": -81.8723,
+    "radiusKm": 75,
+    "minWindKt": 96,
+    "limitUSD": 1000000
+  }
+}

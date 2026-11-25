@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#0e2331" />
+    <meta
+      name="description"
+      content="Replay 36 Atlantic hurricane seasons against two hypothetical parametric contracts. Inspect the exact observation that changes a payout."
+    />
+    <title>Radius Clause | Hurricane trigger desk</title>
+    <link rel="icon" href="./mark.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <header class="mast">
+      <div class="wrap nav">
+        <a class="brand" href="./" aria-label="Radius Clause home"
+          ><img src="./mark.svg" width="36" height="36" alt="" />Radius
+          Clause</a
+        >
+        <nav aria-label="Project">
+          <button class="plain" id="method-open">Method</button
+          ><a href="https://github.com/dylanlaewe/radius-clause"
+            >GitHub <span aria-hidden="true">↗</span></a
+          >
+        </nav>
+      </div>
+    </header>
+    <main class="wrap">
+      <div class="intro">
+        <div>
+          <div class="kicker">
+            <span class="dash"></span> Catastrophe finance
+          </div>
+          <h1>Hurricane trigger desk<span>.</span></h1>
+          <p>
+            Replay two payout rules against 36 Atlantic storm seasons. See which
+            storms change the payout.
+          </p>
+        </div>
+        <div class="archive-stamp">
+          <strong>1990 — 2025</strong><span>NOAA / HURDAT2</span>
+        </div>
+      </div>
+      <div id="loading" role="status">
+        Loading the Atlantic best-track archive…
+      </div>
+      <div id="desk" hidden>
+        <div class="workbench">
+          <section class="event" aria-labelledby="event-title">
+            <div class="event-top">
+              <div>
+                <span class="overline">Storm replay</span>
+                <h2 id="event-title">Storm track</h2>
+              </div>
+              <div class="event-result" id="event-result"></div>
+            </div>
+            <div id="map">
+              <span class="map-loading">Drawing recorded fixes…</span>
+            </div>
+            <div class="map-key">
+              <span><i class="key track"></i>Best track</span
+              ><span><i class="key a"></i>Clause A</span
+              ><span><i class="key b"></i>Clause B</span>
+            </div>
+            <div class="fix-strip">
+              <div>
+                <span class="overline">Selected observation</span
+                ><strong id="fix-date"></strong>
+              </div>
+              <div class="fix-wind">
+                <strong id="fix-wind"></strong><small id="fix-distance"></small>
+              </div>
+            </div>
+            <div class="scrub">
+              <button id="prev" aria-label="Previous storm observation">
+                ‹</button
+              ><input
+                type="range"
+                id="fix"
+                min="0"
+                step="1"
+                aria-label="Storm observation"
+              /><button id="next" aria-label="Next storm observation">›</button
+              ><span id="fix-count"></span>
+            </div>
+          </section>
+          <section class="terms box" aria-labelledby="terms-title">
+            <div class="panel-header">
+              <span class="overline">Contract inputs</span>
+              <h2 id="terms-title">Term sheets</h2>
+            </div>
+            <form id="terms-form">
+              <label for="site" class="field-label">Reference site</label
+              ><select id="site"></select>
+              <div id="coords" hidden>
+                <label
+                  >Latitude<input
+                    type="number"
+                    step="any"
+                    min="-90"
+                    max="90"
+                    required
+                    id="lat" /></label
+                ><label
+                  >Longitude<input
+                    type="number"
+                    step="any"
+                    min="-180"
+                    max="180"
+                    required
+                    id="lon"
+                /></label>
+              </div>
+              <div class="comparison-inputs">
+                <span></span><strong class="col-a"><i></i>Clause A</strong
+                ><strong class="col-b"><i></i>Clause B</strong>
+                <label for="a-radius">Radius <small>km</small></label
+                ><input
+                  id="a-radius"
+                  aria-label="Clause A radius in kilometres"
+                  type="number"
+                  min="1"
+                  max="2000"
+                  required
+                /><input
+                  id="b-radius"
+                  aria-label="Clause B radius in kilometres"
+                  type="number"
+                  min="1"
+                  max="2000"
+                  required
+                />
+                <label for="a-wind">Min. wind <small>kt</small></label
+                ><input
+                  id="a-wind"
+                  aria-label="Clause A minimum wind in knots"
+                  type="number"
+                  min="0"
+                  max="200"
+                  required
+                /><input
+                  id="b-wind"
+                  aria-label="Clause B minimum wind in knots"
+                  type="number"
+                  min="0"
+                  max="200"
+                  required
+                />
+              </div>
+              <label for="limit" class="field-label"
+                >Per-storm limit <small>USD · both clauses</small></label
+              ><input
+                id="limit"
+                type="number"
+                min="1"
+                max="1000000000"
+                step="1"
+                required
+              />
+              <button type="submit" id="run" class="run">
+                Run comparison <span aria-hidden="true">⏎</span>
+              </button>
+              <span id="form-status" role="status"></span>
+            </form>
+          </section>
+        </div>
+        <section class="outcome box" aria-label="Selected storm payouts">
+          <div class="result-card">
+            <span class="overline"><i class="disc a"></i> Clause A payout</span
+            ><strong id="a-payout"></strong><small id="a-note"></small>
+          </div>
+          <div class="result-card">
+            <span class="overline"><i class="disc b"></i> Clause B payout</span
+            ><strong id="b-payout"></strong><small id="b-note"></small>
+          </div>
+          <div class="breakpoint">
+            <span class="overline">Trigger breakpoint · Clause B</span
+            ><strong id="breakpoint"></strong>
+            <p id="breakpoint-note"></p>
+            <button id="focus-fix" class="text-btn">
+              Inspect threshold fix
+            </button>
+          </div>
+        </section>
+        <section class="ledger box" id="ledger">
+          <div class="section-head">
+            <div>
+              <span class="overline">Atlantic archive / 1990–2025</span>
+              <h2>Event ledger</h2>
+            </div>
+            <div class="downloads">
+              <button class="secondary" id="export">Evidence JSON</button
+              ><button class="secondary" id="brief">Download brief</button>
+            </div>
+          </div>
+          <div class="metrics" id="metrics"></div>
+          <div class="filters">
+            <label
+              >Show<select id="filter">
+                <option value="flip">Changed outcomes</option>
+                <option value="hit">Any trigger</option>
+                <option value="all">All storms</option>
+              </select></label
+            ><label
+              >Find a storm<input
+                id="search"
+                type="search"
+                placeholder="Name or season"
+            /></label>
+          </div>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Storm / season</th>
+                  <th>Clause A</th>
+                  <th>Clause B</th>
+                  <th>Minimum radius B</th>
+                </tr>
+              </thead>
+              <tbody id="rows"></tbody>
+            </table>
+          </div>
+          <div class="pages">
+            <span id="row-count"></span>
+            <div>
+              <button class="secondary" id="back">Previous</button
+              ><button class="secondary" id="more">Next</button>
+            </div>
+          </div>
+        </section>
+        <section class="loss box">
+          <details id="loss-details">
+            <summary>Compare with site losses</summary>
+            <p>
+              Paste one NOAA storm ID and USD loss per row for the applied site.
+              Enter 0 for a known zero loss. Omitted storms stay unknown.
+              Applied records enter your downloads and stay in this browser tab.
+            </p>
+            <form id="loss-form">
+              <label for="loss-input">Storm ID, loss in USD</label
+              ><textarea
+                id="loss-input"
+                rows="4"
+                maxlength="100000"
+                placeholder="storm_id,loss_usd&#10;AL092022,250000"
+              ></textarea>
+              <div class="downloads">
+                <button id="apply-loss" type="submit" class="secondary">
+                  Apply loss records</button
+                ><button type="button" id="clear-loss" class="secondary">
+                  Clear records
+                </button>
+              </div>
+            </form>
+            <div id="loss-result" role="status"></div>
+          </details>
+        </section>
+        <section class="surface box">
+          <div class="section-head">
+            <div>
+              <span class="overline">Sensitivity analysis</span>
+              <h2>Trigger surface</h2>
+            </div>
+            <span class="surface-unit">Historical storm count</span>
+          </div>
+          <p>
+            Each cell counts storms that would pay at this site. Select a cell
+            to apply its radius and wind threshold to Clause B.
+          </p>
+          <div class="table-scroll" id="surface"></div>
+        </section>
+      </div>
+      <noscript
+        >This workbench requires JavaScript. The command-line replay is
+        available on GitHub.</noscript
+      >
+    </main>
+    <footer class="wrap">
+      <span>Radius Clause · Historical scenario analysis</span
+      ><a href="https://www.nhc.noaa.gov/data/">NOAA archive</a
+      ><a
+        href="https://github.com/dylanlaewe/radius-clause/blob/main/RESEARCH.md"
+        >Market research</a
+      >
+    </footer>
+    <dialog id="method">
+      <div class="dialog-head">
+        <h2>How the desk works</h2>
+        <button id="method-close" autofocus>Close</button>
+      </div>
+      <p>
+        Both clauses use the same site and per-storm limit. Each pays once when
+        an archived tropical-storm or hurricane center falls inside the radius
+        and the storm’s maximum sustained wind meets the threshold at that same
+        fix. Equality counts.
+      </p>
+      <p>
+        Distances use a spherical great-circle calculation. A line on the map
+        connects recorded fixes for orientation. Only recorded fixes enter the
+        calculation. Maximum storm wind can differ sharply from wind experienced
+        at the site.
+      </p>
+      <p>
+        The trigger breakpoint is the smallest radius that includes a
+        sufficiently intense fix for the selected storm. The annual ledger
+        includes seasons with zero triggers. Historical counts describe this
+        archive and rule only. A damage or premium estimate requires additional
+        evidence.
+      </p>
+      <p>
+        Contracts here are hypothetical. Real instruments can use pressure
+        grids, loss declarations, event-specific data vintages or other rules.
+        The desk uses revised NOAA best tracks from the 1990–2025 Atlantic
+        archive. The export contains both rules, source metadata and storm-level
+        evidence.
+      </p>
+      <a
+        class="text-btn"
+        href="https://www.nhc.noaa.gov/data/hurdat/hurdat2-format-nov2019.pdf"
+        >Read NOAA’s archive specification</a
+      >
+    </dialog>
+    <script type="module" src="./app.mjs"></script>
+  </body>
+</html>
